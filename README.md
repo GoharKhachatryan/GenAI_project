@@ -1,17 +1,16 @@
-# Test task — setup
+# Test task
 
-The task itself is described in [TASK.md](TASK.md). This README only covers
-how to bring the skeleton up so you can start.
+## Step 0: Set up
 
-## Requirements
+The experiments were done in Python == 3.11.
 
-- Python ≥ 3.11
-- A single GPU (CUDA / MPS) or CPU is fine — Colab T4 is enough.
-- `pip install torch torchvision numpy scikit-learn` is all the skeleton needs
-  (`scikit-learn` is only used to fit the PCA during setup).
-  Anything else (matplotlib, jupyter, etc.) is up to you.
+Create a virtual environment and install the requirements.txt:
 
-## One-time setup
+```bash
+pip install -r requirements.txt
+```
+
+## Step 1: Dataset preparation
 
 Run these once, in order, from this directory:
 
