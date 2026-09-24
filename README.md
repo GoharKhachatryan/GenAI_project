@@ -2,13 +2,15 @@
 
 ## Step 0: Set up
 
-The experiments were done in Python == 3.11.
+The experiments were done in Python == 3.11.16.
 
 Create a virtual environment and install the requirements.txt:
 
 ```bash
 pip install -r requirements.txt
 ```
+
+**Important Note:** To avoid path mismatches, run *all* of the notebooks from the *ROOT* folder.
 
 ## Step 1: Dataset preparation
 
@@ -30,20 +32,17 @@ After this you will have:
 
 All four are gitignored.
 
-## Importing the dataset
+## Step 2: Conditional analysis
 
-```python
-from prepare_dataset import PairedCIFAR10
+Before starting the main task, check the file:
 
-train_dataset = PairedCIFAR10("train")
-val_dataset   = PairedCIFAR10("val")
-test_dataset  = PairedCIFAR10("test")
-
-image, cond, label = train_dataset[0]
-# image: (3, 32, 32) float in [-1, 1]
-# cond:  (16,) float
-# label: scalar long in [0, 9]  -- diagnostic only; the model must NOT see it
+```bash
+notebooks/01_conditioning_exploration.ipynb
 ```
+
+Here you can find the basic analysis of the conditional vectors, like feature-wise distribution analysis, correlations, train/val distribution analysis, etc. And also explanations were needed with a final conclusion.
+
+**Important note (again): To run this notebook, run it from the *ROOT* directory.
 
 ## What you may / must not change
 
