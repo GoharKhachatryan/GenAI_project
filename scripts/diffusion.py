@@ -59,3 +59,29 @@ class DDPM:
         x_t = (sqrt_alpha_bar_t * x0 + sqrt_one_minus_alpha_bar_t * noise)
 
         return x_t, noise
+
+    # Training objective
+    def training_loss(
+        self,
+        model,
+        x_0,
+        t,
+        cond,
+    ):
+
+        noise = torch.randn_like(x_0)
+
+        x_t, _ = self.q_sample(x_0, t, noise=noise)
+
+        noise_pred = model(
+            x_t,
+            t,
+            cond,
+        )
+
+        loss = F.mse_loss(
+            noise_pred,
+            noise,
+        )
+
+        return loss
