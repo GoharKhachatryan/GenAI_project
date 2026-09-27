@@ -42,7 +42,41 @@ notebooks/01_conditioning_exploration.ipynb
 
 Here you can find the basic analysis of the conditional vectors, like feature-wise distribution analysis, correlations, train/val distribution analysis, etc. And also explanations were needed with a final conclusion.
 
-**Important note (again): To run this notebook, run it from the *ROOT* directory.
+**Important note (again):** To run this notebook, run it from the *ROOT* directory.
+
+## Step 3: Model architecture
+
+The blocks like ResBlocks, Upsampling, Downsampling, Attention, as well as the UNet's architecture can be found in the **scripts** folder.
+
+For this task I have implemented and trained 4 models (including one baseline).
+
+The conditional vector and the timestep embedding are fused with either addition:
+
+```bash
+t_emb + c_emb -> emb
+```
+
+or concatenation + MLP:
+
+```bash
+concat(t_emb, c_emb) -> MLP -> emb.
+```
+
+There are also 2 types of ResBlocks implemented, based on the embedding injection: via addition and via scale/shift.
+
+So the trained models are:
+
+1. Additive fusion + additive ResBlock conditioning (Baseline) - 9.2M parameters
+
+2. Learned fusion + additive ResBlock conditioning - 9.4M parameters
+
+3. Additive fusion + scale-and-shift modulation - 9.6M parameters
+
+4. Learned fusion + scale-and-shift modulation - 9.8M parameters
+
+All of the models are within the given parameter range. For further details, refer to the corresponding script.
+
+## Step 4: Training
 
 ## What you may / must not change
 
