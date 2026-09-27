@@ -78,6 +78,20 @@ All of the models are within the given parameter range. For further details, ref
 
 ## Step 4: Training
 
+The training process is described in
+
+``` bash
+scripts/02_training.ipynb
+```
+
+The resulting plots are:
+
+|1                   | 2                  | 3                  | 4                  |
+|--------------------|--------------------|--------------------|--------------------|
+|![](plots/plot1.png)|![](plots/plot2.png)|![](plots/plot3.png)|![](plots/plot4.png)|
+
+As you can see the training plots are very similar. The main question is that how each one of these models follows the condition during the generation process.
+
 ## What you may / must not change
 
 - `pseudo_crossmodal.py` is fixed. The conditioning signal must be
