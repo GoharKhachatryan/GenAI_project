@@ -68,11 +68,11 @@ So the trained models are:
 
 1. Additive fusion + additive ResBlock conditioning (Baseline) - 9.2M parameters
 
-2. Learned fusion + additive ResBlock conditioning - 9.4M parameters
+2. Concatenation + Learned MLP fusion + additive ResBlock conditioning - 9.4M parameters
 
 3. Additive fusion + scale-and-shift modulation - 9.6M parameters
 
-4. Learned fusion + scale-and-shift modulation - 9.8M parameters
+4. Concatenation + Learned MLP fusion + scale-and-shift modulation - 9.8M parameters
 
 All of the models are within the given parameter range. For further details, refer to the corresponding script.
 
@@ -81,7 +81,7 @@ All of the models are within the given parameter range. For further details, ref
 The training process is described in
 
 ``` bash
-scripts/02_training.ipynb
+notebooks/02_training.ipynb
 ```
 
 The resulting plots are:
@@ -90,7 +90,17 @@ The resulting plots are:
 |--------------------|--------------------|--------------------|--------------------|
 |![](plots/plot1.png)|![](plots/plot2.png)|![](plots/plot3.png)|![](plots/plot4.png)|
 
-As you can see the training plots are very similar. The main question is that how each one of these models follows the condition during the generation process.
+The training curves are very similar, so denoising loss alone does not clearly distinguish the conditioning mechanisms. The more important question is how well each model preserves the conditioning signal during generation.
+
+### Approximate runtime
+
+On a single NVIDIA T4 GPU:
+
+- One training epoch: ~65–70 seconds
+- 30 epochs: ~35 minutes
+- 50 epochs: ~55–60 minutes
+
+Dataset preparation and the quality probe only need to be run once.
 
 ## What you may / must not change
 
