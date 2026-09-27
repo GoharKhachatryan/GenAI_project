@@ -16,6 +16,7 @@ class UNet(nn.Module):
         out_channels=3,
         base_channels=64,
         emb_dim=256,
+        block_cls=ResBlock,
     ):
 
         super().__init__()
@@ -29,7 +30,7 @@ class UNet(nn.Module):
         )
 
         # Encoder:
-        self.enc1 = ResBlock(
+        self.enc1 = block_cls(
             base_channels,
             base_channels,
             emb_dim,
@@ -37,7 +38,7 @@ class UNet(nn.Module):
         self.down1 = Downsample(base_channels)
 
 
-        self.enc2 = ResBlock(
+        self.enc2 = block_cls(
             base_channels,
             base_channels * 2,
             emb_dim,
@@ -45,7 +46,7 @@ class UNet(nn.Module):
         self.down2 = Downsample(base_channels * 2)
 
 
-        self.enc3 = ResBlock(
+        self.enc3 = block_cls(
             base_channels * 2,
             base_channels * 4,
             emb_dim,
@@ -54,7 +55,7 @@ class UNet(nn.Module):
 
 
         # Bottleneck:
-        self.mid1 = ResBlock(
+        self.mid1 = block_cls(
             base_channels * 4,
             base_channels * 4,
             emb_dim,
@@ -62,7 +63,7 @@ class UNet(nn.Module):
 
         self.attn = AttentionBlock(base_channels * 4)
 
-        self.mid2 = ResBlock(
+        self.mid2 = block_cls(
             base_channels * 4,
             base_channels * 4,
             emb_dim,
@@ -72,7 +73,7 @@ class UNet(nn.Module):
 
         self.up3 = Upsample(base_channels * 4)
         # concat with encoder skip: 256 + 256 = 512
-        self.dec3 = ResBlock(
+        self.dec3 = block_cls(
             base_channels * 8,
             base_channels * 4,
             emb_dim,
@@ -80,7 +81,7 @@ class UNet(nn.Module):
 
         self.up2 = Upsample(base_channels * 4)
         # concat with encoder skip: 256 + 128 = 384
-        self.dec2 = ResBlock(
+        self.dec2 = block_cls(
             base_channels * 6,
             base_channels * 2,
             emb_dim,
@@ -88,7 +89,7 @@ class UNet(nn.Module):
 
         self.up1 = Upsample(base_channels * 2)
         # concat with encoder skip: 128 + 64 = 192
-        self.dec1 = ResBlock(
+        self.dec1 = block_cls(
             base_channels * 3,
             base_channels,
             emb_dim,

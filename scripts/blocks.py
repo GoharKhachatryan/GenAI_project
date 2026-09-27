@@ -61,6 +61,74 @@ class ResBlock(nn.Module):
         return h + self.skip(x)
 
 
+# ResBlock with scale and shift condition injection
+class ScaleShiftResBlock(nn.Module):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        emb_dim,
+    ):
+        super().__init__()
+
+        self.norm1 = nn.GroupNorm(8, in_channels)
+
+        self.conv1 = nn.Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size=3,
+            padding=1,
+        )
+
+        # Now produce 2 outputs for scale and shift
+        self.emb_proj = nn.Linear(
+            emb_dim,
+            2 * out_channels,
+        )
+
+        self.norm2 = nn.GroupNorm(8, out_channels)
+
+        self.conv2 = nn.Conv2d(
+            out_channels,
+            out_channels,
+            kernel_size=3,
+            padding=1,
+        )
+
+        if in_channels != out_channels:
+            self.skip = nn.Conv2d(
+                in_channels,
+                out_channels,
+                kernel_size=1,
+            )
+        
+        else:
+            self.skip = nn.Identity()
+
+    def forward(self, x, emb):
+        h = self.norm1(x)
+        h = F.silu(h)
+        h = self.conv1(h)
+
+        emb_out = self.emb_proj(F.silu(emb))
+
+        # Here divide the output vector into 2 vectors
+        scale, shift = emb_out.chunk(2, dim=1)
+
+        h = self.norm2(h)
+
+        # Do the scale and shift instead of addition
+        h = (
+            h * (1 + scale[:, :, None, None])
+            + shift[:, :, None, None]
+        )
+
+        h = F.silu(h)
+        h = self.conv2(h)
+
+        return h + self.skip(x)
+
+
 # Downsample blocks for UNet
 class Downsample(nn.Module):
     def __init__(self, channels):
