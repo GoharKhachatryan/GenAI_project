@@ -42,3 +42,21 @@ def cosine_beta_schedule(
         betas,
         max=0.999
     )
+
+def make_sampling_timesteps(
+    total_timesteps,
+    num_steps,
+    device,
+):
+
+    if not 2 <= num_steps <= total_timesteps:
+        raise ValueError("num_steps must be between 2 and total_timesteps")
+    
+    timesteps = torch.linspace(
+        0,
+        total_timesteps - 1,
+        num_steps,
+        device=device,
+    ).round().long()
+
+    return timesteps

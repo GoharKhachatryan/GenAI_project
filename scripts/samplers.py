@@ -1,6 +1,6 @@
 import torch
 
-from scripts.helpers import extract
+from scripts.helpers import extract, make_sampling_timesteps
 
 # For one step sampling
 @torch.no_grad()
@@ -69,6 +69,82 @@ def ddpm_step(
     return x_prev
 
 
+# DDPM step for x_t -> x_{prev_t}
+@torch.no_grad()
+def ddpm_step_respaced(
+    model,
+    ddpm,
+    x_t,
+    t,
+    prev_t,
+    cond,
+):
+    
+    batch_size = x_t.shape[0]
+
+    t_batch = torch.full(
+        (batch_size,),
+        t,
+        device=x_t.device,
+        dtype=torch.long,
+    )
+
+    # Predict the noise for the original timestep t
+    eps_pred = model(
+        x_t,
+        t_batch,
+        cond,
+    )
+
+    alpha_bar_t = ddpm.alpha_bars[t]
+
+    # Based on the predicted noise, predict x_0
+    x_0_pred = (
+        x_t
+        - torch.sqrt(1.0 - alpha_bar_t) * eps_pred
+    ) / torch.sqrt(alpha_bar_t)
+
+    # If the step is last, return x_0_pred
+    if prev_t < 0:
+        return x_0_pred
+
+    # For other steps find the coefficients of the predicted x_0 and given x_t
+    alpha_bar_prev = ddpm.alpha_bars[prev_t]
+
+    alpha_ratio = alpha_bar_t / alpha_bar_prev
+    beta_eff = 1.0 - alpha_ratio
+
+    posterior_var = (
+        beta_eff
+        * (1.0 - alpha_bar_prev)
+        / (1.0 - alpha_bar_t)
+    )
+    
+    # clip the negative values in case of incorrect rounding
+    posterior_var = posterior_var.clamp(min=0.0)
+
+    coef_x_0 = (
+        torch.sqrt(alpha_bar_prev)
+        * beta_eff
+        / (1.0 - alpha_bar_t)
+    )
+
+    coef_x_t = (
+        torch.sqrt(alpha_ratio)
+        * (1.0 - alpha_bar_prev)
+        / (1.0 - alpha_bar_t)
+    )
+
+    mean = coef_x_0 * x_0_pred + coef_x_t * x_t
+
+    noise = torch.randn_like(x_t)
+
+    # Sample from this distribution x_{prev_t}
+    x_prev = mean + torch.sqrt(posterior_var) * noise
+
+    return x_prev
+
+
 # For the full generation
 @torch.no_grad()
 def ddpm_sample(
@@ -104,6 +180,62 @@ def ddpm_sample(
             x,
             t,
             cond,
+        )
+
+    return x
+
+
+# Full reverse sampling using fewer than T inference steps
+@torch.no_grad()
+def ddpm_sample_respaced(
+    model,
+    ddpm,
+    cond,
+    num_steps,
+    image_shape=(3, 32, 32),
+    x_init=None,
+):
+
+    model.eval()
+
+    batch_size = cond.shape[0]
+
+    # For the fair comparision of the models, use the same initial noise
+    if x_init is None:
+        x = torch.randn(
+            batch_size,
+            *image_shape,
+            device=cond.device,
+        )
+
+    else:
+        x = x_init.clone()
+
+    sampling_timesteps = make_sampling_timesteps(
+        total_timesteps=ddpm.timesteps,
+        num_steps=num_steps,
+        device=cond.device,
+    )
+
+    sampling_timesteps = sampling_timesteps.flip(0)
+
+    for i in range(len(sampling_timesteps)):
+        t = sampling_timesteps[i].item()
+
+        # For the last step, make sure x_0_pred is returned
+        if i == len(sampling_timesteps) - 1:
+            prev_t = -1
+
+        else:
+            prev_t = sampling_timesteps[i + 1].item()
+
+        x = ddpm_step_respaced(
+            model=model,
+            ddpm=ddpm,
+            x_t=x,
+            t=t,
+            prev_t=prev_t,
+            cond=cond,
         )
 
     return x
