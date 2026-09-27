@@ -43,6 +43,20 @@ class DDPM:
             dim=0,
         )
 
+        self.alpha_bars_prev = torch.cat(
+            [
+                torch.ones(1, device=device),
+                self.alpha_bars[:-1],
+            ],
+            dim=0,
+        )
+
+        self.posterior_variance = (
+            self.betas
+            * (1.0 - self.alpha_bars_prev)
+            / (1.0 - self.alpha_bars)
+        )
+
     # Forward diffusion process
     def q_sample(self, x0, t, noise=None):
         if noise is None:
