@@ -104,6 +104,8 @@ def ddpm_step_respaced(
         - torch.sqrt(1.0 - alpha_bar_t) * eps_pred
     ) / torch.sqrt(alpha_bar_t)
 
+    x_0_pred = x_0_pred.clamp(-1.0, 1.0)
+
     # If the step is last, return x_0_pred
     if prev_t < 0:
         return x_0_pred
@@ -178,6 +180,14 @@ def ddim_step(
         x_t
         - torch.sqrt(1.0 - alpha_bar_t) * eps_pred
     ) / torch.sqrt(alpha_bar_t)
+
+    x_0_pred = x_0_pred.clamp(-1.0, 1.0)
+
+    # After clamping x_0_pred recompute eps_pred
+    # to get 2 mutually consistent quantities
+    eps_pred = (
+        x_t - torch.sqrt(alpha_bar_t) * x_0_pred
+    ) / torch.sqrt(1.0 - alpha_bar_t)
 
     # If the final step
     if prev_t < 0:
