@@ -102,6 +102,26 @@ On a single NVIDIA T4 GPU:
 
 Dataset preparation and the quality probe only need to be run once.
 
+## Step 5: Sanity check
+
+After training is done and the checkpoints are saved in the *checkpoints* folder, you can refer to the:
+
+```bash
+notebooks/03_sampling.ipynb
+```
+
+for the task's second sub-level.
+
+Note, that the sampling implementations are in the following script:
+
+```bash
+scripts/samplers.py
+```
+
+To run test or just review the process itself, refer to the third notebook.
+
+**Important:** Run the notebook from the repo ROOT.
+
 ## What you may / must not change
 
 - `pseudo_crossmodal.py` is fixed. The conditioning signal must be
