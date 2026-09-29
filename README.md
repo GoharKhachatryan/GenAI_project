@@ -136,7 +136,13 @@ notebooks/04_evaluation.ipynb
 
 The evaluation results were also saved and can be found [here](https://drive.google.com/file/d/1gwXx0cU3qj-t71TF3n4E6t4jOT21qn-v/view?usp=sharing), as well as the csv file with the same [results](https://drive.google.com/file/d/1sp3fgB_8VFTEXZ6Xs7Dm69QKiUOlRjbu/view?usp=sharing).
 
-The visualizations of these results can be found in the end of the evaluation notebook.
+Here you can see the feature-wise cycle evaluation for all of the models and inference setups.
+
+|Heatmap                     |Plot                     |
+|----------------------------|-------------------------|
+|![](plots/task3_heatmap.png)|![](plots/task3_plot.png)|
+
+Even though the training losses were almost identical, different models preserve the conditions in different ways. For detailed explanations and other plots refer to the notebook.
 
 I took the model with the best results for the sub-task 4 evaluation (since testing all 4 is computationally heavy).
 
