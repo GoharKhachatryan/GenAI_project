@@ -42,6 +42,12 @@ notebooks/01_conditioning_exploration.ipynb
 
 Here you can find the basic analysis of the conditional vectors, like feature-wise distribution analysis, correlations, train/val distribution analysis, etc. And also explanations were needed with a final conclusion.
 
+Some examples from this notebook:
+
+|Feature distribution             |Feature correlation             |
+|---------------------------------|--------------------------------|
+|![](plots/task0_distribution.png)|![](plots/task0_correlation.png)|
+
 **Important note (again):** To run this notebook, run it from the *ROOT* directory.
 
 ## Step 3: Model architecture
