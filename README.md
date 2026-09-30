@@ -158,6 +158,8 @@ In contrast, luminance standard deviation (luma_std, feature 11) is only weakly 
 
 A similar tendency can be observed among the PCA components. PCA_1, which is comparatively correlated with the intensity-related features, is generally preserved better than some of the later PCA components, which are more independent. However, correlation alone does not determine reconstruction quality; feature complexity, model capacity, sampling method, and how directly a feature corresponds to visible image structure may also affect the error.
 
+For more detailed analysis refer to the notebook's last sub-heading.
+
 I took the model with the best results for the sub-task 4 evaluation (since testing all 4 is computationally heavy).
 
 ## What you may / must not change
