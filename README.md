@@ -148,7 +148,15 @@ Here you can see the feature-wise cycle evaluation for all of the models and inf
 |----------------------------|-------------------------|
 |![](plots/task3_heatmap.png)|![](plots/task3_plot.png)|
 
-Even though the training losses were almost identical, different models preserve the conditions in different ways. For detailed explanations and other plots refer to the notebook.
+### Relation to feature correlation.
+
+Even though the training losses were almost identical, different models preserve the conditions in different ways.
+
+The per-feature cycle-consistency errors appear to be related to the redundancy of the conditioning representation. The row/column luminance statistics and channel means (features 0–10) are strongly correlated with one another, and most of these features are comparatively well preserved. Because several correlated features encode overlapping information about brightness and color structure, the model has multiple cues from which these properties can be represented during generation.
+
+In contrast, luminance standard deviation (luma_std, feature 11) is only weakly correlated with most other conditioning dimensions and shows one of the largest standardized cycle errors. This suggests that relatively independent information may be harder for the model to preserve: if that information is not represented accurately, there are fewer correlated features that indirectly constrain the generated image toward the correct value.
+
+A similar tendency can be observed among the PCA components. PCA_1, which is comparatively correlated with the intensity-related features, is generally preserved better than some of the later PCA components, which are more independent. However, correlation alone does not determine reconstruction quality; feature complexity, model capacity, sampling method, and how directly a feature corresponds to visible image structure may also affect the error.
 
 I took the model with the best results for the sub-task 4 evaluation (since testing all 4 is computationally heavy).
 
