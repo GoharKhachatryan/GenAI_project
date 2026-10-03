@@ -172,6 +172,10 @@ notebooks/04_evaluation.ipynb
 
 The evaluation results were also saved and can be found [here](https://drive.google.com/file/d/1gwXx0cU3qj-t71TF3n4E6t4jOT21qn-v/view?usp=sharing), as well as the csv file with the same [results](https://drive.google.com/file/d/1sp3fgB_8VFTEXZ6Xs7Dm69QKiUOlRjbu/view?usp=sharing).
 
+|Raw                        |Standardized                        |
+|---------------------------|------------------------------------|
+|![](plots/task3_raw_l2.png)|![](plots/task3_standardized_l2.png)|
+
 The main result was that the scale-and-shift ResBlock variants preserved the conditioning signal more accurately than the additive ResBlock variants.
 
 Among the tested models, additive feature fusion + scale-and-shift modulation (noted as 'add_scale_shift') produced the lowest standardized cycle-consistency error and was therefore selected for the sampler comparison in Task 4.
@@ -182,7 +186,11 @@ This result is notable because the four models had very similar denoising traini
 
 Here you can see the feature-wise cycle evaluation for all of the models and inference setups.
 
-|Heatmap                     |Plot                     |
+|Heatmap (Raw)               |Plot (Raw)                       |
+|----------------------------|---------------------------------|
+|![](plots/task3_heatmap_raw.png)|![](plots/task3_plot_raw.png)|
+
+|Heatmap (Standardized)      |Plot (Standardized)      |
 |----------------------------|-------------------------|
 |![](plots/task3_heatmap.png)|![](plots/task3_plot.png)|
 
