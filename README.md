@@ -204,17 +204,19 @@ In contrast, luminance standard deviation (luma_std, feature 11) is only weakly 
 
 To investigate whether these results could be related to the structure of the conditioning space, I computed feature correlations on the training set and defined a simple redundancy score as the mean absolute correlation of each feature with the other 15 dimensions.
 
-PUT A PLOT HERE
+|Redundancy                     |Redundancy vs Standardized MAE     |
+|-------------------------------|-----------------------------------|
+|![](plots/task3_redundancy.png)|![](plots/task3_redundancy_mae.png)|
 
 For DDPM, feature redundancy was strongly negatively associated with standardized per-feature reconstruction error:
 
-$Spearman \rho = -0.726, p = 0.0014$.
+Spearman $\rho = -0.726, p = 0.0014$.
 
 In other words, conditioning features that were more redundant with the rest of the vector tended to be preseved better by DDPM.
 
 For DDIM, this relationship disappeared:
 
-$Spearman \rho = -0.009, p = 0.974$.
+Spearman $\rho = -0.009, p = 0.974$.
 
 This suggests that redundant conditioning information may be easier to preserve because multiple correlated dimensions provide overlapping constraints on the generated image. More independent features carry information that cannot be recovered as easily from the rest of the condition.
 
