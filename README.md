@@ -182,7 +182,7 @@ Among the tested models, additive feature fusion + scale-and-shift modulation (n
 
 This result is notable because the four models had very similar denoising training/validation losses (refer to the Training sub-heading). The denoising MSE alone therefore did not reveal which architecture made better use of the conditioning vector during generation.
 
-## Relation to feature correlation.
+## Which conditioning features are preserved?
 
 Here you can see the feature-wise cycle evaluation for all of the models and inference setups.
 
@@ -190,21 +190,35 @@ Here you can see the feature-wise cycle evaluation for all of the models and inf
 |----------------------------|---------------------------------|
 |![](plots/task3_heatmap_raw.png)|![](plots/task3_plot_raw.png)|
 
+The pre-feature analysis showed that preservation quality is not uniform across the 16 conditioning dimension. Even though the training losses were almost identical, different models preserve the conditions in different ways.
+
 |Heatmap (Standardized)      |Plot (Standardized)      |
 |----------------------------|-------------------------|
 |![](plots/task3_heatmap.png)|![](plots/task3_plot.png)|
-
-Even though the training losses were almost identical, different models preserve the conditions in different ways.
 
 The per-feature cycle-consistency errors appear to be related to the redundancy of the conditioning representation. The row/column luminance statistics and channel means (features 0–10) are strongly correlated with one another, and most of these features are comparatively well preserved. Because several correlated features encode overlapping information about brightness and color structure, the model has multiple cues from which these properties can be represented during generation.
 
 In contrast, luminance standard deviation (luma_std, feature 11) is only weakly correlated with most other conditioning dimensions and shows one of the largest standardized cycle errors. This suggests that relatively independent information may be harder for the model to preserve: if that information is not represented accurately, there are fewer correlated features that indirectly constrain the generated image toward the correct value.
 
-A similar tendency can be observed among the PCA components. PCA_1, which is comparatively correlated with the intensity-related features, is generally preserved better than some of the later PCA components, which are more independent. However, correlation alone does not determine reconstruction quality; feature complexity, model capacity, sampling method, and how directly a feature corresponds to visible image structure may also affect the error.
+### Redundancy
 
-For more detailed analysis refer to the notebook's last sub-heading.
+To investigate whether these results could be related to the structure of the conditioning space, I computed feature correlations on the training set and defined a simple redundancy score as the mean absolute correlation of each feature with the other 15 dimensions.
 
-I took the model with the best results for the sub-task 4 evaluation (since testing all 4 is computationally heavy).
+PUT A PLOT HERE
+
+For DDPM, feature redundancy was strongly negatively associated with standardized per-feature reconstruction error:
+
+$Spearman \rho = -0.726, p = 0.0014$.
+
+In other words, conditioning features that were more redundant with the rest of the vector tended to be preseved better by DDPM.
+
+For DDIM, this relationship disappeared:
+
+$Spearman \rho = -0.009, p = 0.974$.
+
+This suggests that redundant conditioning information may be easier to preserve because multiple correlated dimensions provide overlapping constraints on the generated image. More independent features carry information that cannot be recovered as easily from the rest of the condition.
+
+However, redundancy is not a complete explanation. Some features, such as PCA_2, do not follow this pattern, indicating that feature semantics, representation capacity, and sampler dynamics also matter.
 
 ## What you may / must not change
 
