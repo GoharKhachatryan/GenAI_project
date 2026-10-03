@@ -1,8 +1,14 @@
-# Test task
+# Conditional DDPM for Cross-modal CIFAR-10 Generation
 
-## Step 0: Set up
+This project implements a conditional diffusion model from scratch in PyTorch for generating CIFAR-10 images from a deterministic 16-dimensional pseudo-crossmodal conditioning vector.
 
-The experiments were done in Python == 3.11.16.
+Four conditioning architectures are compared, followed by cycle-consistency analysis and a DDPM-vs-DDIM sampling study across multiple inference budgets.
+
+The main finding is that scale-and-shift conditioning improves condition preservation, while semantic class accuracy remains much more limited than low-level conditioning fidelity.
+
+## Setup
+
+The experiments were done in Python3.11.16.
 
 Create a virtual environment and install the requirements.txt:
 
@@ -12,7 +18,7 @@ pip install -r requirements.txt
 
 **Important Note:** To avoid path mismatches, run *all* of the notebooks from the *ROOT* folder.
 
-## Step 1: Dataset preparation
+## Dataset preparation
 
 Run these once, in order, from this directory:
 
@@ -32,7 +38,7 @@ After this you will have:
 
 All four are gitignored.
 
-## Step 2: Conditional analysis
+## Conditional analysis
 
 Before starting the main task, check the file:
 
@@ -50,7 +56,9 @@ Some examples from this notebook:
 
 **Important note (again):** To run this notebook, run it from the *ROOT* directory.
 
-## Step 3: Model architecture
+# Task 1
+
+## Model architecture
 
 The blocks like ResBlocks, Upsampling, Downsampling, Attention, as well as the UNet's architecture can be found in the **scripts** folder.
 
@@ -82,7 +90,7 @@ So the trained models are:
 
 All of the models are within the given parameter range. For further details, refer to the corresponding script.
 
-## Step 4: Training
+## Training
 
 The training process is described in
 
@@ -108,7 +116,9 @@ On a single NVIDIA T4 GPU:
 
 Dataset preparation and the quality probe only need to be run once.
 
-## Step 5: Sanity check
+# Task 2
+
+## Sanity check
 
 After training is done and the checkpoints are saved in the *checkpoints* folder, you can refer to the:
 
@@ -130,9 +140,29 @@ To run test or just review the process itself, refer to the third notebook.
 
 You can access to the folder with my trained weights [here](https://drive.google.com/drive/folders/1zuBAkqO_105zWoxoBhuH2KDgCKb5E_LP?usp=sharing).
 
-## Step 6: Evaluation for the sub-problem 3.
+# Task 3
 
-For this task I chose to evaluate all 4 of my models in 2 different inference implementations. The number of steps for both DDPM and DDIM were 100 (for computation purposes). Also for the DDIM model's eta parameter was set to 0, and the initial noise for each sample were fixed for the fair comparison and reproducibility.
+## Intro to the Cycle-consistency evaluation.
+
+The goal of this evaluation is to measure how well the generated image preserves the information contained in the 16-dimensional conditioning vector.
+
+For every conditioning vector $c$ from the held-out CIFAR-10 test set:
+
+1. Generate an image $\hat{x}$.
+
+2. Apply the fixed pseudo-crossmodal extractor to $\hat{x}$.
+
+3. Obtain the reconstructed condition $\hat{c}$.
+
+4. Compare $c$ and $\hat{c}$.
+
+The task defined metric is $||c - \hat{c}||_2.$
+
+Because the 16 conditioning dimensions have different numerical scales (refer to the condition analysis), I also report a standardized version in which each feature error is divided by the training-set standard deviation of that feature. The raw metric is retained as the task-defining quantity, while the standardized metric is useful for comparing feature preservation without high-variance dimensions dominating the result.
+
+## Architecture comparison
+
+For this task I evaluated all four trained architectures using the same held-out conditions, the same initial noise, and the same sampling budget. Also the DDIM model's $\eta$ parameter was set to 0 for the fair comparison and reproducibility.
 
 To run experiments, use the following notebook:
 
@@ -142,13 +172,19 @@ notebooks/04_evaluation.ipynb
 
 The evaluation results were also saved and can be found [here](https://drive.google.com/file/d/1gwXx0cU3qj-t71TF3n4E6t4jOT21qn-v/view?usp=sharing), as well as the csv file with the same [results](https://drive.google.com/file/d/1sp3fgB_8VFTEXZ6Xs7Dm69QKiUOlRjbu/view?usp=sharing).
 
+The main result was that the scale-and-shift ResBlock variants preserved the conditioning signal more accurately than the additive ResBlock variants.
+
+Among the tested models, additive feature fusion + scale-and-shift modulation (noted as 'add_scale_shift') produced the lowest standardized cycle-consistency error and was therefore selected for the sampler comparison in Task 4.
+
+This result is notable because the four models had very similar denoising training/validation losses (refer to the Training sub-heading). The denoising MSE alone therefore did not reveal which architecture made better use of the conditioning vector during generation.
+
+## Relation to feature correlation.
+
 Here you can see the feature-wise cycle evaluation for all of the models and inference setups.
 
 |Heatmap                     |Plot                     |
 |----------------------------|-------------------------|
 |![](plots/task3_heatmap.png)|![](plots/task3_plot.png)|
-
-### Relation to feature correlation.
 
 Even though the training losses were almost identical, different models preserve the conditions in different ways.
 
