@@ -100,7 +100,7 @@ notebooks/02_training.ipynb
 
 The resulting plots are:
 
-|1                   | 2                  | 3                  | 4                  |
+| add_add            | concat_add         | add_scale_shift    | concat_scale_shift |
 |--------------------|--------------------|--------------------|--------------------|
 |![](plots/plot1.png)|![](plots/plot2.png)|![](plots/plot3.png)|![](plots/plot4.png)|
 
@@ -148,6 +148,16 @@ DDPM ancestral sampling is stochastic because Gaussian noise is injected during 
 
 DDIM with $\eta = 0$ is deterministic once the initial noise $x_T$, conditioning vector, model, and timestep schedule are fixed. Therefore the generated image is deterministic with respect to $(c, x_T)$, but not with respect to $c$ alone. Different initial noise tensors can still generate different images for the same condition.
 
+## Reduced-step sampling stability
+
+A naive attempt to use the original adjacent-step DDPM posterior while skipping timesteps was numerically unstable: reduced step samples could explode far outside the training image range.
+
+I therefore implemented the posterior for an arbitrary transition from timestep $t$ to an earlier selected timestep $t_{prev}$. The sampler first reconstructs the predicted clean image $x_0$ and uses it in the generalized posterior.
+
+For reduced-step DDPM and DDIM sampling, the predicted $x_0$ is clipped to the training image range $[-1, 1]$. For DDIM, the predicted noise is recomputed after this clipping so that $x_t$, $x_0$ and $\epsilon$ remain mutually consistent.
+
+This stabilization was necessary for reliable low-step sampling.
+
 # Task 3
 
 ## Intro to the Cycle-consistency evaluation.
@@ -168,9 +178,11 @@ The task defined metric is $||c - \hat{c}||_2.$
 
 Because the 16 conditioning dimensions have different numerical scales (refer to the condition analysis), I also report a standardized version in which each feature error is divided by the training-set standard deviation of that feature. The raw metric is retained as the task-defining quantity, while the standardized metric is useful for comparing feature preservation without high-variance dimensions dominating the result.
 
+All Task 3 architecture comparisons use 100 reverse steps.
+
 ## Architecture comparison
 
-For this task I evaluated all four trained architectures using the same held-out conditions, the same initial noise, and the same sampling budget. Also the DDIM model's $\eta$ parameter was set to 0 for the fair comparison and reproducibility.
+For this task I evaluated all four trained architectures using the same held-out conditions, the same initial noise, and the same sampling budget. DDIM was evaluated with $\eta = 0$, making its reverse trajectory deterministic for a fixed initial noise tensor. The same initial noise was reused across architectures and samplers to make comparisons reproducible.
 
 To run experiments, use the following notebook:
 
@@ -271,6 +283,20 @@ The quality probe reaches approximately 75.8% accuracy on the real CIFAR-10 test
 
 You can find my results [here](https://drive.google.com/file/d/1xYZyvmVC14QT-8A2J9erKpqVoWwYh8zY/view?usp=sharing)
 
+|Sampler |Steps |Cycle L2 |Standardized cycle L2 |Conditional Accuracy|
+|--------|------|---------|----------------------|--------------------|
+|DDPM    |500   |0.7514   |0.2448                |0.2948              |
+|DDPM    |100   |0.7318   |0.2457                |0.2879              |
+|DDPM    |50    |0.7182   |0.2513                |0.2890              |
+|DDPM    |20    |0.6949   |0.2812                |0.2961              |
+|DDPM    |10    |0.6836   |0.3505                |0.2946              |
+|--------|------|---------|----------------------|--------------------|
+|DDIM    |500   |1.2483   |0.3897                |0.2727              |
+|DDIM    |100   |1.2788   |0.4007                |0.2742              |
+|DDIM    |50    |1.3065   |0.4129                |0.2742              |
+|DDIM    |20    |1.4738   |0.4750                |0.2746              |
+|DDIM    |10    |1.8226   |0.6032                |0.2682              |
+
 ### Cycle-consistency trade-off
 
 Using the standardized cycle metric, DDPM outperformed DDIM at every tested step count.
@@ -292,6 +318,8 @@ For that exact reason I report both:
 1. Raw L2 for direct compliance with the task definition,
 
 2. Standardized L2 as a scale-balanced diagnostic.
+
+From the standardized cycle-consistency perspective, DDIM is dominated by DDPM: at every matched budget, DDPM achieves lower standardized cycle error. For DDPM, 50-100 steps provide the most attractive region of the trade-off: 500 steps require substantially more computation for almost no additional standardized cycle-consistency benefit.
 
 ### Conditional classifier accuracy
 
@@ -315,6 +343,8 @@ The conditioning vector also does not explicitly contain a class label. It conta
 
 This explains why cycle consistency can improve while classifier accuracy remains almost unchanged.
 
+Increasing the sampling budget provides no clear benefit. The small differences between DDPM step counts are too small to interpret as meaningful improvements, so expensive configurations such as 500-step DDPM are difficult to justify based on semantic accuracy alone.
+
 ## Main findings
 
 1. **Training loss was not sufficient for model selection.**
@@ -331,6 +361,12 @@ At the same sampling budgets, DDPM produced lower standardized cycle error acros
 
 5. **50-100 DDPM steps capture most of the cycle consistency benefit.**
 Increasing from 100 to 500 steps adds substantial compute for almost no improvement in standardized cycle error.
+
+6. **Semantic class fidelity is much more limited than low-level condition fidelity.**
+The fixed classifier achieves about 75.8% accuracy on real CIFAR-10 test images, while generated samples achieve only about 27-30%.
+
+7. **More reverse steps do not solve the semantic limitation.**
+Conditional accuracy remains nearly flat across sampling budgets, suggesting that the bottleneck is primarily the information represented by the pseudo-crossmodal condition and/or how strongly the model uses it, rather than insufficient reverse-sampling computation.
 
 ## Limitations and next steps
 
