@@ -140,6 +140,14 @@ To run test or just review the process itself, refer to the third notebook.
 
 You can access to the folder with my trained weights [here](https://drive.google.com/drive/folders/1zuBAkqO_105zWoxoBhuH2KDgCKb5E_LP?usp=sharing).
 
+## Samplers
+
+Both samplers use exactly the same trained denoising model.
+
+DDPM ancestral sampling is stochastic because Gaussian noise is injected during the reverse process.
+
+DDIM with $\eta = 0$ is deterministic once the initial noise $x_T$, conditioning vector, model, and timestep schedule are fixed. Therefore the generated image is deterministic with respect to $(c, x_T)$, but not with respect to $c$ alone. Different initial noise tensors can still generate different images for the same condition.
+
 # Task 3
 
 ## Intro to the Cycle-consistency evaluation.
@@ -221,6 +229,45 @@ Spearman $\rho = -0.009, p = 0.974$.
 This suggests that redundant conditioning information may be easier to preserve because multiple correlated dimensions provide overlapping constraints on the generated image. More independent features carry information that cannot be recovered as easily from the rest of the condition.
 
 However, redundancy is not a complete explanation. Some features, such as PCA_2, do not follow this pattern, indicating that feature semantics, representation capacity, and sampler dynamics also matter.
+
+# Task 4
+
+## Intro to the Quality / Steps trade-off
+
+Task 4 focuses on inference. Based on the Task 3 results, I selected the  **add_scale_shift** model and kept it fixed for every experiment.
+
+I compared DDPM ancestral sampling and deterministic DDIM ($\eta = 0$) at {500, 100, 50, 20, 10} reverse steps.
+
+For fairness, all configurations use the same:
+
+- held-out test conditions,
+- test labels,
+- inital Gaussian noise,
+- trained model,
+- condition normalizing,
+- fixed external classifier probe.
+
+For the detailed overview, refer to the following notebook:
+
+```bash
+notebooks/05_pareto.ipynb
+```
+
+## Metrics used
+
+Two quality measures are reported:
+
+1. **Cycle consistency** (From task 3) - how closely the condition extracted from the generated image matches the original conditioning vector.
+
+2. **Conditional classifier accuracy** - whether the fixed CIFAR-10 probe assigns the generated image the same class label as the source image from which the condition was derived.
+
+The classifier label is used only for evaluation. It is never given to the diffusion model as a conditioning input (as requested by the task).
+
+### Probe baseline
+
+The quality probe reaches approximately 75.8% accuracy on the real CIFAR-10 test set. This provides a practical reference for interpreting generated-image classification accuracy.
+
+## Results
 
 ## What you may / must not change
 
