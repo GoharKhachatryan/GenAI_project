@@ -269,6 +269,52 @@ The quality probe reaches approximately 75.8% accuracy on the real CIFAR-10 test
 
 ## Results
 
+You can find my results [here](https://drive.google.com/file/d/1xYZyvmVC14QT-8A2J9erKpqVoWwYh8zY/view?usp=sharing)
+
+### Cycle-consistency trade-off
+
+Using the standardized cycle metric, DDPM outperformed DDIM at every tested step count.
+
+For DDPM, most of the available cycle-consistency quality was already reached by 50-100 steps. Increasing the budged from 100 to 500 steps reduced standardized cycle error only approximately 0.246 to 0.245, despite requiring 5x more reverse-model evaluations.
+
+Below 50 steps, the degradation became much more visible, particularly at 10 steps.
+
+DDIM degraded more strongly as the step budget was reduced and remained worse than DDPM at every matched step count in this experiment.
+
+|Raw                    |Standardized                        |
+|-----------------------|------------------------------------|
+|![](plots/task4_l2.png)|![](plots/task4_l2_standardized.png)|
+
+The raw and standardized cycle metrics show different trends for DDPM. This is not a contradiction: the raw Euclidean norm is dominated by higher-scale conditioning dimensions, while standardized gives each feature comparable weight.
+
+For that exact reason I report both:
+
+1. Raw L2 for direct compliance with the task definition,
+
+2. Standardized L2 as a scale-balanced diagnostic.
+
+### Conditional classifier accuracy
+
+Classification accuracy behaved very differently from cycle consistency.
+
+DDPM remained around 29% accuracy across all tested step budgets, while DDIM remained around 27%. Increasing the number of steps did not produce a systematic improvement in semantic class agreement.
+
+For example, 20-step DDPM slightly exceeded 500-step DDPM in measured classification accuracy, but the difference is only about 0.1 percentage points and is too small to interret as a genuine quality improvement.
+
+This usggests that additional reverse sampling steps improve preservation of the 16-dimensional pseufo-crossmodal condition much more than they improve CIFAR-10 semantic fidelity.
+
+|Classifier accuracy     |
+|------------------------|
+|![](plots/task4_acc.png)|
+
+The relatively low classifier accuracy does not contradict with the denoising loss of approximately 0.05.
+
+The diffusion model is trained to predict injected noise, not to predict the label. A low noise-prediction MSE therefore does not imply that the generated image must preserve high-level semantic class identity.
+
+The conditioning vector also does not explicitly contain a class label. It contains deterministic image statistics such as luminance summaries, RGB means, luminance variation, and PCA components. These statistics contain some semantic information, but they do not uniquely determine a CIFAR-10 class.
+
+This explains why cycle consistency can improve while classifier accuracy remains almost unchanged.
+
 ## What you may / must not change
 
 - `pseudo_crossmodal.py` is fixed. The conditioning signal must be
