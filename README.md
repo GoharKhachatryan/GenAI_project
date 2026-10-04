@@ -315,16 +315,36 @@ The conditioning vector also does not explicitly contain a class label. It conta
 
 This explains why cycle consistency can improve while classifier accuracy remains almost unchanged.
 
-## What you may / must not change
+## Main findings
 
-- `pseudo_crossmodal.py` is fixed. The conditioning signal must be
-  deterministic across runs — do not modify it.
-- Everything else (model, training loop, samplers, evaluation notebooks) is
-  yours to write.
+1. **Training loss was not sufficient for model selection.**
+All four architectures had similar denoising losses, but their ability to preserve the condition during generation differed substantially.
 
-## Deliverable
+2. **Scale-and-shift conditioning worked best.**
+The additive-fusion + scale-and-shift model gave the strongest cycle consistency and was selected for the sampler study.
 
-Commit one or several Jupyter notebooks plus any supporting `.py` modules,
-together with a short top-level README describing how to reproduce your
-results (commands, expected runtime, what each notebook produces). See
-[TASK.md](TASK.md) for the full prompt and what we look for.
+3. **Feature preservation is structured.**
+Some conditioning dimensions are much easier to preserve than others. For DDPM, highly redundant features tended to have lower reconstruction error.
+
+4. **DDPM was stronger than DDIM for cycle consistency in this setup.**
+At the same sampling budgets, DDPM produced lower standardized cycle error across all tested step counts.
+
+5. **50-100 DDPM steps capture most of the cycle consistency benefit.**
+Increasing from 100 to 500 steps adds substantial compute for almost no improvement in standardized cycle error.
+
+## Limitations and next steps
+
+The main limitation here is that the 16-dimensional pseudo-crossmodal representation does not explicitly encode CIFAR-10 class identity. As a result, good cycle-consistency does not necessarily imply semantic agreement.
+
+With more time or compute, I would investigate:
+
+- classifier-free guidance or stronger conditioning injection to test whether the model is under-using the condition,
+
+- repeated stochastic DDPM evaluations to attch uncertainty estimates to the classifier metric,
+
+- per-class confusion matrices to understand which semantic classes are preserved or confused,
+
+- perceptual image-quality metrics in addition to the supplied classifier,
+
+- whether the raw/standardized cycle discrepancy can be traced to specific high-variance condition dimensions.
+
